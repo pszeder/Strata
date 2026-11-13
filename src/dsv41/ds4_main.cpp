@@ -1,3 +1,5 @@
+#include <cstdint>
+extern "C" void strata_ds4_own1_counts(uint64_t*);
 // Copyright (c) 2026 Peasant Smith and the Project Maya contributors (MIT; https://github.com/mw00/project-maya, v1.1.17).
 // Ported into Strata (third_party/project-maya/NOTICE.md, LICENSE); changes are in the git history of this file.
 // src/ds4/ds4_main.cpp - maya-ds4: DeepSeek-V4.1-Flash on Maya.
@@ -1400,6 +1402,9 @@ int serve(strata::ds4::Model& m, const std::string& eos_list, bool spec, float c
         // VRAM hit, promotions a token) and DeepSeek's own - experts a token on the CPU lane, MB a token the storage
         // read (Linux), the n-gram memory's (Engram) read time a token, the drafts' acceptance
         const strata::ds4::Stats s_dec = m.stats();
+        static unsigned long long own1_request = 0;
+        ++own1_request;
+        uint64_t own1_before[6] = {}; strata_ds4_own1_counts(own1_before);
         const long long io_dec = io_read_bytes();
         auto stat_line = [&]() {
             std::printf("%s\n", stat_text(t1, s_dec, io_dec, produced, d_off, d_acc).c_str());
@@ -1477,6 +1482,24 @@ int serve(strata::ds4::Model& m, const std::string& eos_list, bool spec, float c
             std::fflush(stdout);
         }
         const auto& s = m.stats();
+
+        uint64_t own1_after[6] = {}; strata_ds4_own1_counts(own1_after);
+        if (const char* v = std::getenv("STRATA_DS4_PHASE_LOG"); v != nullptr && std::atoi(v) != 0)
+          for (int i=0;i<3;++i)
+            std::fprintf(stderr, "DS4_OWN1 req=%llu produced=%lld type=%d jobs=%llu rows=%llu\n", own1_request, produced,
+                         i==0?16:i==1?17:29, (unsigned long long)(own1_after[i]-own1_before[i]),
+                         (unsigned long long)(own1_after[i+3]-own1_before[i+3]));
+        // Opt-in raw decode counters. Timers overlap; these are not additive critical-path phases.
+        if (const char* v = std::getenv("STRATA_DS4_PHASE_LOG"); v != nullptr && std::atoi(v) != 0)
+            std::fprintf(stderr,
+                         "DS4_PHASE produced=%lld wall_ms=%.3f trunk_rows=%lld cpu_ms=%.3f routing_wait_ms=%.3f "
+                         "head_wait_ms=%.3f engram_ms=%.3f draft_ms=%.3f verify_ms=%.3f cpu_experts=%lld "
+                         "stream_experts=%lld routed_experts_including_drafter=%lld\n",
+                         produced, t2 - t1, (long long) (s.tokens - s_dec.tokens), s.cpu_ms - s_dec.cpu_ms,
+                         s.gpu_wait_ms - s_dec.gpu_wait_ms, s.head_ms - s_dec.head_ms, s.engram_ms - s_dec.engram_ms,
+                         s.draft_ms - s_dec.draft_ms, s.verify_ms - s_dec.verify_ms,
+                         (long long) (s.cpu_experts - s_dec.cpu_experts), (long long) (s.stream_experts - s_dec.stream_experts),
+                         (long long) (s.experts - s_dec.experts));
         std::fprintf(stderr,
                      "maya ds4 serve: prompt %zu tokens = %zu reused + %zu read in %.0f ms (%.1f tok/s), %lld generated "
                      "in %.0f ms (%.2f tok/s); CPU lane %.1f%% of the experts\n",

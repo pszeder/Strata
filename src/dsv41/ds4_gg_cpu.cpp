@@ -8,6 +8,22 @@
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include <atomic>
+#include <cstdint>
+namespace strata_own1_execution {
+struct alignas(64) Count { std::atomic<uint64_t> jobs{0}, rows{0}; };
+Count counts[3];
+inline void hit(int type, int rows) {
+    const int i = type == 16 ? 0 : type == 17 ? 1 : 2;
+    if (counts[i].jobs.fetch_add(1, std::memory_order_relaxed) == 0)
+        std::fprintf(stderr, "ds4: PR5765 exact one-token rows active type=%d\n", type);
+    counts[i].rows.fetch_add((uint64_t)rows, std::memory_order_relaxed);
+}
+}
+extern "C" void strata_ds4_own1_counts(uint64_t* out) {
+    for (int i=0;i<3;++i) { out[i]=strata_own1_execution::counts[i].jobs.load(std::memory_order_relaxed); out[i+3]=strata_own1_execution::counts[i].rows.load(std::memory_order_relaxed); }
+}
+
 
 #if defined(STRATA_DSV41_TQ_CPU)
 #include "ggml-cpu.h"
@@ -225,11 +241,11 @@ static int use_iq256(int type, int nt) {
 // cache 27.2 -> 21.1 ns/block (IQ2_XXS, ggml), 30.7 -> 20.2 (IQ2_XS, ggml), 42.1 -> 20.8 (IQ1_M, the AVX2 rows; ggml's dot 28.3);
 // 44 threads from DRAM, each thread's rows on its node: 68-75 -> 87-89 GB/s (IQ2_XXS), 68 -> 84-88 (IQ2_XS), 41-42 -> 78-81
 // (IQ1_M).  So on where it was measured: ggml-cpu built for AVX2 + FMA + F16C, and no AVX-512 (those CPUs keep their rows).
-// Only in the automatic choice (DS4_GG_IQ256 unset): =0 keeps ggml-cpu's dots, =1 the AVX2 rows.  STRATA_CPU_IQ_OWN1=0 turns it off.
+// Only in the automatic choice (DS4_GG_IQ256 unset): =0 keeps ggml-cpu's dots, =1 the AVX2 rows.  This fork requires STRATA_CPU_IQ_OWN1=1 (off by default).
 static bool use_own1(int type) {
     static const bool on = [] {
         const char* v = std::getenv("STRATA_CPU_IQ_OWN1");
-        if (v != nullptr && v[0] == '0' && v[1] == 0) return false;
+        if (v == nullptr || std::atoi(v) == 0) return false;
         return ggml_cpu_has_avx2() && ggml_cpu_has_fma() && ggml_cpu_has_f16c() && !ggml_cpu_has_avx512() &&
                strata::kernels::cpu::cpu_avx2_ok() && !strata::kernels::cpu::cpu_avx512_ok() &&
                !strata::kernels::cpu::cpu_avx512bw_ok();   // (cpu_avx512_ok needs VBMI: Skylake-X / Cascade Lake answer no there)
@@ -245,6 +261,7 @@ static void dots(int type, const uint8_t* w, size_t rb, int n, const void* const
             return;
         }
         if (nt == 1 && g_iq256 == 2 && use_own1(type)) {
+            strata_own1_execution::hit(type, r1-r0);
             strata::kernels::cpu::iq_own1_rows(type, w, rb, n, act[0], out[0], r0, r1);
             return;
         }

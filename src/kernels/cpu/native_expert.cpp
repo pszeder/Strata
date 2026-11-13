@@ -456,7 +456,7 @@ int native_gu_mt_min(int gu_type) {
 // Measured on a 2x Xeon E5-2699 v4 (Broadwell, iq_own1_bench, rows of 2560 and 7168 weights): one thread from cache
 // 27-30 -> 21-23 ns/block (IQ2_XXS), 31 -> 20-21 (IQ2_XS), 28-29 -> 21-22 (IQ1_M); 44 threads from DRAM +17-31 % (IQ2_XXS),
 // +19-29 % (IQ2_XS), +25-34 % (IQ1_M).  On where it was measured: ggml-cpu built for AVX2 + FMA + F16C and no AVX-512 in the
-// CPU or in ggml-cpu.  STRATA_CPU_IQ_OWN1=0 turns it off.
+// CPU or in ggml-cpu.  This fork requires STRATA_CPU_IQ_OWN1=1 (off by default).
 namespace {
 bool own1_matches_ggml(int type) {
     const ggml_type_traits_cpu* tc = traits(type);
@@ -492,7 +492,7 @@ bool own1_matches_ggml(int type) {
 bool own1_on(int type) {
     static const bool gate = [] {
         const char* v = std::getenv("STRATA_CPU_IQ_OWN1");
-        if (v != nullptr && v[0] == '0' && v[1] == 0) return false;
+        if (v == nullptr || std::atoi(v) == 0) return false;
         // no AVX-512 of any tier: cpu_avx512_ok() needs VBMI, so a Skylake-X / Cascade Lake (F/BW/VL, VNNI, no VBMI) is excluded by
         // cpu_avx512bw_ok() (0.2.12 runs the 512-bit rows there too: cpu_vnni_ok())
         return cpu_avx2_ok() && !cpu_avx512_ok() && !cpu_avx512bw_ok() && ggml_cpu_has_avx2() && ggml_cpu_has_fma() &&

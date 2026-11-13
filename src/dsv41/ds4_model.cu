@@ -29,6 +29,7 @@
 #include "ds4_pcie.hpp"
 #include "ds4_path_policy.hpp"
 #include "ds4_pool.hpp"
+#include "ds4_iq_flow.hpp"
 #include "ds4_store.hpp"
 #include "ds4_vision.cuh"
 #if defined(STRATA_GPU_METAL)
@@ -1253,6 +1254,7 @@ struct Model::Impl {
     std::atomic<int64_t> eg_rows_n{0}, eg_hits_n{0}, eg_reads_n{0}, eg_wait_ns{0}, eg_io_ns{0};
     uint16_t* h_emb = nullptr;        // the window's embedding rows
     std::vector<float> c_xh, c_xsb, c_acc, c_xhd, c_xsd, c_accd, c_yd;
+    iq_flow::Flow iq_flow_state;
     // the state
     int64_t pos = 0;
     std::vector<int32_t> toks, ctoks;
@@ -1352,6 +1354,8 @@ struct Model::Impl {
     static float env_f(const char* k, float d) { return std::getenv(k) ? (float) std::atof(std::getenv(k)) : d; }
     const float c_margin = env_f("DS4_CACHE_MARGIN", 1.25f), c_bonus = env_f("DS4_CACHE_BONUS", 1.0f),
                 c_decay = env_f("DS4_CACHE_DECAY", 0.9f);
+    const float c_prefill_decay = env_f("STRATA_DS4_PREFILL_CACHE_DECAY", c_decay);
+    const bool c_prefill_freeze = env_f("STRATA_DS4_PREFILL_HEAT_FREEZE", 0.0f) != 0.0f;
     const int c_inflight = std::max(1, (int) env_f("DS4_CACHE_INFLIGHT", (float) kMaxSwaps));
     // the RAM tier (a GGUF's in-place experts, as GLM's: the hottest in VRAM, the next hottest here, the coldest in the
     // files): RAM slots of one expert blob each, filled at load with the hottest experts VRAM does not hold, so the
@@ -1780,11 +1784,17 @@ struct Model::Impl {
         std::lock_guard<std::mutex> lk(prof_mu);
         const bool chunk_sample = prof_chunk;
         bool sample_ok = !prof_failed;
-        double sample_ms[6] = {};
+        double sample_ms[16] = {};
+        const int stages = chunk_sample ? 11 : 6;
         std::vector<std::pair<int, cudaEvent_t>> last;
         int current_dev = -1;
         if (sample_ok) {
             for (const ProfMark& m : prof_marks) {
+                if (m.stage < 0 || m.stage >= stages) {
+                    std::fprintf(stderr, "ds4: profiling disabled: invalid stage %d for %d-stage sample\n", m.stage, stages);
+                    sample_ok = false;
+                    break;
+                }
                 if (m.dev < 0 || (size_t) m.dev >= prof_pool.size()) {
                     std::fprintf(stderr, "ds4: profiling disabled: CUDA device %d is outside the event pool\n", m.dev);
                     sample_ok = false;
@@ -1819,7 +1829,6 @@ struct Model::Impl {
         }
         if (sample_ok) {
             double* total = chunk_sample ? cprof_ms : st.prof_ms;
-            const int stages = chunk_sample ? 4 : 6;
             for (int i = 0; i < stages; ++i) total[i] += sample_ms[i];
             for (const ProfMark& m : prof_marks) prof_pool[(size_t) m.dev].push_back(m.ev);
             prof_marks.clear();
@@ -3762,6 +3771,10 @@ struct Model::Impl {
             if (ahead_mode > 0) pf_th = std::thread([this] { prefetch_loop(); });
         }
         if (o.expert_cache) {
+            if (c_prefill_freeze)
+                std::fprintf(stderr, "ds4: experimental chunked-prefill cache heat freeze enabled; routing/profile counts unchanged\n");
+            if (std::getenv("STRATA_DS4_PREFILL_CACHE_DECAY"))
+                std::fprintf(stderr, "ds4: experimental cache heat decay: prompt chunks %.3f, decode %.3f\n", c_prefill_decay, c_decay);
             size_t maxb = 0;
             for (const Layer& l : L) maxb = std::max(maxb, l.blob);
             const int nt = std::max(1, std::min(c_inflight, std::getenv("DS4_CACHE_THREADS") ? std::atoi(std::getenv("DS4_CACHE_THREADS")) : 1));
@@ -8232,6 +8245,25 @@ struct Model::Impl {
             const int t = en.tok[i];
             return aq + (size_t) (t < kWin ? t : kWin + en.slot0 + i) * E * 4;
         };
+        // Opt-in single-NUMA port of Maya PR928, retaining all original CPU rows.
+        // This precedes the original serial x quantization (no duplicate/requantized input).
+        static const bool flow_on = env_f("STRATA_DS4_IQ_FLOW", 0.0f) != 0.0f;
+        static const bool flow_check = env_f("STRATA_DS4_IQ_FLOW_CHECK", 0.0f) != 0.0f;
+        if (flow_on && NH == 1) {
+            static const gg::IqCpu q8k = [] {
+                gg::IqCpu f; std::string error;
+                if (!gg::iq_cpu_fmt(16, 16, 256, 256, f, error)) return gg::IqCpu{};
+                return f;
+            }();
+            if (q8k.h_bytes == 292 && fm.gu_act == q8k.gu_act && fm.d_act == q8k.d_act) {
+                auto weight = [&](const Ent& en, int r) { return mx_part_ptr(l, en.e, r, 0); };
+                auto run = [&](int n, const std::function<void(int)>& fn) {
+                    std::function<void(int)> fs[4]; fs[0] = fn; run_nodes(n, fs);
+                };
+                if (iq_flow_state.execute(fm, q8k.h_bytes, E, FF, kWin, kSlots, RB, x, ldx,
+                                          aq, c_xhd.data(), c_yd.data(), ents, ord, lim, weight, run, flow_check)) return;
+            }
+        }
         {
             bool done[kWin] = {};
             for (const Ent& en : ents)
@@ -8799,10 +8831,10 @@ struct Model::Impl {
             std::fprintf(stderr, "ds4: expert cache: %lld swaps in the idle (%.0f ms, cancelled %d)\n",
                          (long long) (st.swaps - s0), now_ms() - t0, cancel.load() ? 1 : 0);
     }
-    void cache_tick(int T) {
+    void cache_tick(int T, bool prompt_chunk = false) {
         tick_begin();
         rc_tick();
-        cache_tick_swaps(T);
+        cache_tick_swaps(T, prompt_chunk);
         tick_flush();
         store_sync();
         store_watch();
@@ -8819,14 +8851,18 @@ struct Model::Impl {
         const size_t n = store->shrink_chunks(chunks);
         if (n > 0) std::fprintf(stderr, "ds4: RAM store: %.1f GB free: gave back %zu chunks (%zu slots left)\n", avail / 1e9, n, store->slots_allocated());
     }
-    void cache_tick_swaps(int T) {
+    void cache_tick_swaps(int T, bool prompt_chunk = false) {
         if (!o.expert_cache || cache_ths.empty()) return;
         cache_switch();
+        if (prompt_chunk && c_prefill_freeze) {
+            std::fprintf(stderr, "ds4: chunked-prefill cache heat frozen for %d tokens; completed swaps switched, heat/decay/queue unchanged\n", T);
+            return;
+        }
         decay_tokens += T;
         if (decay_tokens >= 256) {   // older use counts less: x0.9 every 256 tokens
             decay_tokens = 0;
             for (Layer& l : L)
-                for (float& h : l.heat) h *= c_decay;
+                for (float& h : l.heat) h *= prompt_chunk ? c_prefill_decay : c_decay;
         }
         cache_queue();
     }
@@ -10057,7 +10093,12 @@ struct Model::Impl {
         const LaneAB& A = C.ab[0];
         // (tok_ab_off is the whole-step check's turn of a token's step - set by step(), so a window would keep the
         // last token's turn: only its verdict, unless the lane pulls in place, which is what that check guards against)
-        const bool off = !ln_zc && (tok_ab.verdict < 0 || A.verdict < 0);
+        // Experimental opt-in: single-token A/B verdicts need not predict verify-window throughput.
+        static const bool window_policy_only = [] {
+            const char* v = std::getenv("STRATA_DS4_STREAM_WIN_OWN_POLICY");
+            return v != nullptr && std::atoi(v) != 0;
+        }();
+        const bool off = !ln_zc && !window_policy_only && (tok_ab.verdict < 0 || A.verdict < 0);
         if (k.ok() && !off && ln_force.empty()) {
             double bt = 1e30;
             const int top = std::min({(int) ex.size(), D.slots, ln_win_max});
@@ -11766,7 +11807,7 @@ struct Model::Impl {
                 pr[e] += (uint32_t) cnt;
                 if (cnt > 0) {   // (the expert cache learns from a chunked prompt as from windows: heat, and the CPU lane's hits)
                     ++n_picked;
-                    l.heat[(size_t) e] += (float) cnt;
+                    if (!c_prefill_freeze) l.heat[(size_t) e] += (float) cnt;
                     if (l.slot[(size_t) e] < 0) l.cpu_hits.push_back(e);
                 }
             }
@@ -12631,15 +12672,25 @@ struct Model::Impl {
             if (chunks[di] == nullptr || !chunks[di]->borrow) continue;
             Dev& d = devs[di];
             Chunk& c = *chunks[di];
-            const size_t need = lay_chunk(c, C, nullptr, 2);
+            // Experimental diagnostic: match the aligned capacity of fixed chunk buffers.
+            // The run still processes exactly C rows; only its borrowed arena gains padding.
+            static const int capacity_align = [] {
+                const char* v = std::getenv("STRATA_DS4_BORROW_ALIGN");
+                const int a = v != nullptr ? std::atoi(v) : 0;
+                return a == 16 || a == 256 ? a : 0;
+            }();
+            const int capacity = capacity_align > 0 ? ((C + capacity_align - 1) / capacity_align) * capacity_align : C;
+            const size_t need = lay_chunk(c, capacity, nullptr, 2);
             if (d.tail == nullptr || !c.flow || need + 256 > d.tail_bytes) {   // (only the flow streams the lent ones)
                 err = "the prompt path's room on CUDA" + std::to_string(d.id) + ": " + std::to_string(need >> 20) +
                       " MiB for chunks of " + std::to_string(C) + " tokens, " + std::to_string(d.tail_bytes >> 20) + " lent";
                 return false;
             }
             const size_t b0 = (d.tail_bytes - need) & ~(size_t) 255;
-            lay_chunk(c, C, d.tail + b0, 2);
-            c.C = C;
+            lay_chunk(c, capacity, d.tail + b0, 2);
+            c.C = capacity;
+            if (capacity_align > 0 && o.verbose)
+                std::fprintf(stderr, "ds4: borrowed arena capacity %d rows for %d actual rows (alignment %d)\n", capacity, C, capacity_align);
             cudaSetDevice(d.id);
             CK(cudaMemsetAsync(d.tail + b0, 0, d.tail_bytes - b0, d.st));
             CK(cudaStreamSynchronize(d.st));
@@ -13174,7 +13225,7 @@ struct Model::Impl {
         }
         pos += took;
         st.tokens += took;
-        cache_tick(took);
+        cache_tick(took, true);
         if (lm_end_.on) {   // (the layer cache's RAM back before the store and the swaps want it)
             lm_end();
             lm_end_.on = false;
