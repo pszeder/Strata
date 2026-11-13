@@ -6,6 +6,10 @@
 </p>
 
 <h3 align="center">Run powerful AI on your own computer.</h3>
+
+> Personal experimental fork: [R9700 tuning, source build, measurements and limits](docs/local-tuning/R9700.md).
+> Upstream release installers do not include this branch’s changes.
+
 <p align="center">Chat, code and work with images, locally.</p>
 
 <p align="center">

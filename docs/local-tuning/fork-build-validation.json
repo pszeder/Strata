@@ -1,0 +1,193 @@
+{
+  "state": "HIP build and extended CPU flow parity passed",
+  "source_revision": "20cd667042de710700dbaddac3b451fe18fbb91c",
+  "commands": [
+    [
+      "cmake",
+      "-S",
+      "<STRATA>",
+      "-B",
+      "<STRATA>/build-hip-pszeder",
+      "-G",
+      "Ninja",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DSTRATA_ENABLE_CUDA=OFF",
+      "-DSTRATA_ENABLE_HIP=ON",
+      "-DSTRATA_BUILD_DSV41=ON",
+      "-DSTRATA_BUILD_TESTS=ON",
+      "-DSTRATA_BUILD_IQ_FLOW_TEST=ON",
+      "-DSTRATA_NATIVE_EXPERTS=ON",
+      "-DCMAKE_PREFIX_PATH=<ROCM_SDK>",
+      "-DCMAKE_HIP_COMPILER=<ROCM_SDK>/llvm/bin/clang++",
+      "-DCMAKE_HIP_ARCHITECTURES=gfx1201",
+      "-DGPU_TARGETS=gfx1201"
+    ],
+    [
+      "cmake",
+      "--build",
+      "<STRATA>/build-hip-pszeder",
+      "--target",
+      "strata-dsv41",
+      "ds4_gg_bench",
+      "ds4_iq_flow_test",
+      "--parallel",
+      "2"
+    ],
+    [
+      "<STRATA>/build-hip-pszeder/ds4_iq_flow_test"
+    ]
+  ],
+  "steps": [
+    {
+      "step": 0,
+      "returncode": 0,
+      "seconds": 5.580479919997742
+    },
+    {
+      "step": 1,
+      "returncode": 0,
+      "seconds": 675.9137143849948
+    },
+    {
+      "step": 2,
+      "returncode": 0,
+      "seconds": 46.67204270900402
+    }
+  ],
+  "CUDA_tested": false,
+  "SYCL_tested": false,
+  "model_tested": false,
+  "engine_SHA256": "392777fa94661a57c68e0ceb636074093d05bd7f539701e37e5691162ddc71cf",
+  "cpu_checks": {
+    "singleton_full_pipeline_cases": [
+      {
+        "type": 16,
+        "nt": 1,
+        "passed": true
+      },
+      {
+        "type": 16,
+        "nt": 2,
+        "passed": true
+      },
+      {
+        "type": 16,
+        "nt": 3,
+        "passed": true
+      },
+      {
+        "type": 16,
+        "nt": 4,
+        "passed": true
+      },
+      {
+        "type": 16,
+        "nt": 5,
+        "passed": true
+      },
+      {
+        "type": 16,
+        "nt": 6,
+        "passed": true
+      },
+      {
+        "type": 17,
+        "nt": 1,
+        "passed": true
+      },
+      {
+        "type": 17,
+        "nt": 2,
+        "passed": true
+      },
+      {
+        "type": 17,
+        "nt": 3,
+        "passed": true
+      },
+      {
+        "type": 17,
+        "nt": 4,
+        "passed": true
+      },
+      {
+        "type": 17,
+        "nt": 5,
+        "passed": true
+      },
+      {
+        "type": 17,
+        "nt": 6,
+        "passed": true
+      },
+      {
+        "type": 18,
+        "nt": 1,
+        "passed": true
+      },
+      {
+        "type": 18,
+        "nt": 2,
+        "passed": true
+      },
+      {
+        "type": 18,
+        "nt": 3,
+        "passed": true
+      },
+      {
+        "type": 18,
+        "nt": 4,
+        "passed": true
+      },
+      {
+        "type": 18,
+        "nt": 5,
+        "passed": true
+      },
+      {
+        "type": 18,
+        "nt": 6,
+        "passed": true
+      },
+      {
+        "type": 22,
+        "nt": 1,
+        "passed": true
+      },
+      {
+        "type": 22,
+        "nt": 2,
+        "passed": true
+      },
+      {
+        "type": 22,
+        "nt": 3,
+        "passed": true
+      },
+      {
+        "type": 22,
+        "nt": 4,
+        "passed": true
+      },
+      {
+        "type": 22,
+        "nt": 5,
+        "passed": true
+      },
+      {
+        "type": 22,
+        "nt": 6,
+        "passed": true
+      }
+    ],
+    "singleton_execution_positive_types": [
+      16,
+      17
+    ],
+    "extended_flow_cases_with_singletons_enabled": 336,
+    "scope": "Clean canonical HIP build, CPU-only exact pipeline checks; no performance or new full-model claim"
+  },
+  "source_revision_note": "Compiled source at20cd6670; later documentation-only commits do not change compiled code.",
+  "commands_note": "Paths below are sanitized placeholders; original commands and complete compiler logs are retained locally."
+}
