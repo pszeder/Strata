@@ -1,0 +1,352 @@
+{
+  "updated": "2026-11-12T21:37:12.648925+00:00",
+  "case": "full-ista-v2048-t12-c32768-l80-dspark-draft-iq2xxs-ownlinked1-borrow-ctx98304-swin-decay0.9-exp714-align256-noslots-checklend-heatbuild-pfdecay0-w3-monv2",
+  "protocol": "Original fixtures and sampling,3warmups+2fresh measured requests per size,quiet60seconds,outputcap4096. Snapshot caches disabled, warmup KV reuse retained. Maxcontext98304.",
+  "results": {
+    "20": {
+      "prompt_tokens": [
+        19750,
+        19750
+      ],
+      "prefill_tok_s": [
+        840.9,
+        857.8
+      ],
+      "decode_tok_s": [
+        32.1,
+        34.3
+      ],
+      "cached_prompt_tokens": [
+        0,
+        0
+      ],
+      "function_passed": [
+        true,
+        true
+      ],
+      "full_answer_passed": [
+        false,
+        false
+      ],
+      "traffic": [
+        {
+          "decode_HIP_H2D_MB_per_output_token": 5.69345737037037,
+          "decode_mapped_staging_MB_per_output_token": 100.44188444444445,
+          "decode_mapped_staging_GB_s": 3.2099178839813636,
+          "decode_payload_proxy_MB_per_output_token": 106.13534181481482,
+          "serial_copy_Gen4_decode_whatif_tok_s": 36.61370947720901,
+          "prefill_HIP_H2D_GB": 137.325151272,
+          "serial_copy_Gen4_prefill_whatif_tok_s": 1066.6201532661637,
+          "decode_CPU_core_seconds_per_output_token": 0.5019444444444447,
+          "decode_disk_read_bytes": 131072
+        },
+        {
+          "decode_HIP_H2D_MB_per_output_token": 0.2779993086419753,
+          "decode_mapped_staging_MB_per_output_token": 91.35473777777777,
+          "decode_mapped_staging_GB_s": 3.1227465456765047,
+          "decode_payload_proxy_MB_per_output_token": 91.63273708641975,
+          "serial_copy_Gen4_decode_whatif_tok_s": 38.70146211326086,
+          "prefill_HIP_H2D_GB": 135.054694196,
+          "serial_copy_Gen4_prefill_whatif_tok_s": 1088.904911752486,
+          "decode_CPU_core_seconds_per_output_token": 0.4483333333333333,
+          "decode_disk_read_bytes": 516096
+        }
+      ],
+      "raw_decode_phases": [
+        {
+          "produced": 325.0,
+          "wall_ms": 10121.471,
+          "trunk_rows": 342.0,
+          "cpu_ms": 7639.204,
+          "routing_wait_ms": 0.0,
+          "head_wait_ms": 9420.148,
+          "engram_ms": 11.265,
+          "draft_ms": 283.931,
+          "verify_ms": 9613.942,
+          "cpu_experts": 17982.0,
+          "stream_experts": 3376.0,
+          "routed_experts_including_drafter": 84960.0,
+          "CPU_fraction_approx": 0.7547523477565662,
+          "CPU_ms_per_output_interval": 23.57779012345679,
+          "CPU_expert_rows_per_output_interval": 55.5,
+          "estimated_logical_CPU_expert_weight_MB_per_output_interval": 538.596864
+        },
+        {
+          "produced": 325.0,
+          "wall_ms": 9463.199,
+          "trunk_rows": 337.0,
+          "cpu_ms": 7023.49,
+          "routing_wait_ms": 0.0,
+          "head_wait_ms": 8804.747,
+          "engram_ms": 13.137,
+          "draft_ms": 265.231,
+          "verify_ms": 9076.709,
+          "cpu_experts": 17241.0,
+          "stream_experts": 3071.0,
+          "routed_experts_including_drafter": 83805.0,
+          "CPU_fraction_approx": 0.7421898239696745,
+          "CPU_ms_per_output_interval": 21.677438271604938,
+          "CPU_expert_rows_per_output_interval": 53.21296296296296,
+          "estimated_logical_CPU_expert_weight_MB_per_output_interval": 516.402432
+        }
+      ],
+      "conditional_CPU_1_6x_decode_tok_s_for_CPU_share_60_to_80_percent": [
+        42.83870967741937,
+        47.42857142857144
+      ],
+      "CPU_own1_execution": [
+        [
+          {
+            "req": 5,
+            "produced": 325,
+            "type": 16,
+            "jobs": 1555552,
+            "rows": 99555328
+          },
+          {
+            "req": 5,
+            "produced": 325,
+            "type": 17,
+            "jobs": 528928,
+            "rows": 33851392
+          },
+          {
+            "req": 5,
+            "produced": 325,
+            "type": 29,
+            "jobs": 0,
+            "rows": 0
+          }
+        ],
+        [
+          {
+            "req": 6,
+            "produced": 325,
+            "type": 16,
+            "jobs": 1490416,
+            "rows": 95386624
+          },
+          {
+            "req": 6,
+            "produced": 325,
+            "type": 17,
+            "jobs": 509408,
+            "rows": 32602112
+          },
+          {
+            "req": 6,
+            "produced": 325,
+            "type": 29,
+            "jobs": 0,
+            "rows": 0
+          }
+        ]
+      ]
+    },
+    "80": {
+      "prompt_tokens": [
+        77786,
+        77786
+      ],
+      "prefill_tok_s": [
+        1095.6,
+        1096.3
+      ],
+      "decode_tok_s": [
+        33.7,
+        33.0
+      ],
+      "cached_prompt_tokens": [
+        0,
+        0
+      ],
+      "function_passed": [
+        true,
+        true
+      ],
+      "full_answer_passed": [
+        true,
+        true
+      ],
+      "traffic": [
+        {
+          "decode_HIP_H2D_MB_per_output_token": 0.23032603236245955,
+          "decode_mapped_staging_MB_per_output_token": 92.12778873786408,
+          "decode_mapped_staging_GB_s": 3.0935904716795837,
+          "decode_payload_proxy_MB_per_output_token": 92.35811477022654,
+          "serial_copy_Gen4_decode_whatif_tok_s": 37.97712408490147,
+          "prefill_HIP_H2D_GB": 272.372512616,
+          "serial_copy_Gen4_prefill_whatif_tok_s": 1272.1649636088603,
+          "decode_CPU_core_seconds_per_output_token": 0.4553721682847912,
+          "decode_disk_read_bytes": 5218304
+        },
+        {
+          "decode_HIP_H2D_MB_per_output_token": 0.3461328469055375,
+          "decode_mapped_staging_MB_per_output_token": 92.95701889250815,
+          "decode_mapped_staging_GB_s": 3.056401935925803,
+          "decode_payload_proxy_MB_per_output_token": 93.30315173941368,
+          "serial_copy_Gen4_decode_whatif_tok_s": 37.137604301228144,
+          "prefill_HIP_H2D_GB": 272.569089976,
+          "serial_copy_Gen4_prefill_whatif_tok_s": 1273.2834925833256,
+          "decode_CPU_core_seconds_per_output_token": 0.46511400651465934,
+          "decode_disk_read_bytes": 856064
+        }
+      ],
+      "raw_decode_phases": [
+        {
+          "produced": 310.0,
+          "wall_ms": 9186.942,
+          "trunk_rows": 321.0,
+          "cpu_ms": 6733.953,
+          "routing_wait_ms": 0.0,
+          "head_wait_ms": 8462.626,
+          "engram_ms": 90.226,
+          "draft_ms": 256.919,
+          "verify_ms": 8723.973,
+          "cpu_experts": 16532.0,
+          "stream_experts": 2956.0,
+          "routed_experts_including_drafter": 79875.0,
+          "CPU_fraction_approx": 0.7329917833376983,
+          "CPU_ms_per_output_interval": 21.79272815533981,
+          "CPU_expert_rows_per_output_interval": 53.50161812297735,
+          "estimated_logical_CPU_expert_weight_MB_per_output_interval": 519.2036709902912
+        },
+        {
+          "produced": 308.0,
+          "wall_ms": 9319.942,
+          "trunk_rows": 325.0,
+          "cpu_ms": 6779.828,
+          "routing_wait_ms": 0.0,
+          "head_wait_ms": 8626.391,
+          "engram_ms": 39.484,
+          "draft_ms": 265.823,
+          "verify_ms": 8849.854,
+          "cpu_experts": 16881.0,
+          "stream_experts": 2961.0,
+          "routed_experts_including_drafter": 80925.0,
+          "CPU_fraction_approx": 0.7274538832966987,
+          "CPU_ms_per_output_interval": 22.08413029315961,
+          "CPU_expert_rows_per_output_interval": 54.986970684039086,
+          "estimated_logical_CPU_expert_weight_MB_per_output_interval": 533.6181976807817
+        }
+      ],
+      "conditional_CPU_1_6x_decode_tok_s_for_CPU_share_60_to_80_percent": [
+        43.032258064516135,
+        47.642857142857146
+      ],
+      "CPU_own1_execution": [
+        [
+          {
+            "req": 10,
+            "produced": 310,
+            "type": 16,
+            "jobs": 1444008,
+            "rows": 92416512
+          },
+          {
+            "req": 10,
+            "produced": 310,
+            "type": 17,
+            "jobs": 491768,
+            "rows": 31473152
+          },
+          {
+            "req": 10,
+            "produced": 310,
+            "type": 29,
+            "jobs": 0,
+            "rows": 0
+          }
+        ],
+        [
+          {
+            "req": 11,
+            "produced": 308,
+            "type": 16,
+            "jobs": 1451304,
+            "rows": 92883456
+          },
+          {
+            "req": 11,
+            "produced": 308,
+            "type": 17,
+            "jobs": 500360,
+            "rows": 32023040
+          },
+          {
+            "req": 11,
+            "produced": 308,
+            "type": 29,
+            "jobs": 0,
+            "rows": 0
+          }
+        ]
+      ]
+    }
+  },
+  "borrow_buffers": true,
+  "phase_counter_note": "Raw timers overlap; CPU_fraction is a modeling approximation, not an additive critical-path decomposition.",
+  "protocol_completed": true,
+  "native_gpu_fault": false,
+  "mapped_staging_range_overflow": 0,
+  "strict_checker_returncode": 1,
+  "long_prefill_target_verified": true,
+  "decode_target_verified": false,
+  "limits": [
+    "80K: functions passed 2/2, complete answers passed 2/2. Strict cohort checker returned 1.",
+    "20K: functions passed 2/2, complete answers passed 0/2. Strict cohort checker returned 1.",
+    "HIP H2D plus mapped-staging writes are a payload proxy. Gen4 numbers assume doubled measured large-copy bandwidth in a serial-copy model, not a measured upgrade or bound. Actual overlap/direct registered reads/polling are excluded.",
+    "Physical DRAM counters were not collected; user chose estimated RAM traffic.",
+    "One completed borrowing cohort with 256-row arena alignment, ROCm7.14, snapshots disabled and byte-for-byte restoration checks. Padding alone as the cause of earlier faults is unproven.",
+    "Expanded CPU expert-byte counts are logical row reads; token sharing/cache reuse means they are not hardware DRAM bytes."
+  ],
+  "restore_checks": [
+    {
+      "experts": 463,
+      "GB": 4.49,
+      "milliseconds": 1136,
+      "matches": true
+    },
+    {
+      "experts": 469,
+      "GB": 4.55,
+      "milliseconds": 1398,
+      "matches": true
+    },
+    {
+      "experts": 463,
+      "GB": 4.49,
+      "milliseconds": 1775,
+      "matches": true
+    },
+    {
+      "experts": 607,
+      "GB": 5.89,
+      "milliseconds": 2465,
+      "matches": true
+    },
+    {
+      "experts": 609,
+      "GB": 5.91,
+      "milliseconds": 2910,
+      "matches": true
+    },
+    {
+      "experts": 608,
+      "GB": 5.9,
+      "milliseconds": 2914,
+      "matches": true
+    }
+  ],
+  "chunked_prefill_heat_frozen": true,
+  "CPU_flow_enabled": true,
+  "CPU_flow_checker": false,
+  "CPU_flow_execution": {
+    "calls": 27169,
+    "checked": 0,
+    "nt_mask": "0x1fffe",
+    "NT1_through6_observed": true
+  },
+  "CPU_own1_enabled": true,
+  "CPU_cache_budget_GiB": 0.0
+}

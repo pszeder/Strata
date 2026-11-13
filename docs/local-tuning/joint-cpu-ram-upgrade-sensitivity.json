@@ -1,0 +1,129 @@
+{
+  "updated": "2026-11-12T21:54:59.791260+00:00",
+  "reference": "own1-linked-full-validation.json,80K",
+  "measured_decode_tok_s": [
+    33.7,
+    33.0
+  ],
+  "mean_reference_decode_tok_s": 33.35,
+  "CPU_lane_fraction_approx": [
+    0.7329917833376983,
+    0.7274538832966987
+  ],
+  "measured_four_channel_DDR4_2133_read_GB_s": 58.885,
+  "formula": "new_tps = old_tps / ((1-f) + f*((1-m)/C + m/B)); f approx measured CPU-lane fraction, m unknown memory-service share of that lane, C CPU compute throughput ratio, B RAM bandwidth ratio",
+  "rows": [
+    {
+      "CPU_compute_speedup_assumption": 1.6,
+      "DDR4_MT_s": 2400,
+      "four_channel_bandwidth_ratio_assumption": 1.1251758087201125,
+      "scenarios": [
+        {
+          "assumed_baseline_CPU_lane_memory_service_fraction": 0,
+          "decode_tok_s_by_reference_run": [
+            46.474548250817826,
+            45.379238810025484
+          ],
+          "mean_decode_tok_s": 45.92689353042165,
+          "gain_percent": 37.71182467892549
+        },
+        {
+          "assumed_baseline_CPU_lane_memory_service_fraction": 0.25,
+          "decode_tok_s_by_reference_run": [
+            43.57046504846307,
+            42.571236413032054
+          ],
+          "mean_decode_tok_s": 43.070850730747566,
+          "gain_percent": 29.147978203141122
+        },
+        {
+          "assumed_baseline_CPU_lane_memory_service_fraction": 0.5,
+          "decode_tok_s_by_reference_run": [
+            41.007974919792304,
+            40.0904939821216
+          ],
+          "mean_decode_tok_s": 40.54923445095695,
+          "gain_percent": 21.586909897921892
+        },
+        {
+          "assumed_baseline_CPU_lane_memory_service_fraction": 0.75,
+          "decode_tok_s_by_reference_run": [
+            38.730155722533695,
+            37.88295078313998
+          ],
+          "mean_decode_tok_s": 38.306553252836835,
+          "gain_percent": 14.862228644188402
+        },
+        {
+          "assumed_baseline_CPU_lane_memory_service_fraction": 1,
+          "decode_tok_s_by_reference_run": [
+            36.69206692187447,
+            35.90583184495821
+          ],
+          "mean_decode_tok_s": 36.29894938341634,
+          "gain_percent": 8.842426936780633
+        }
+      ]
+    },
+    {
+      "CPU_compute_speedup_assumption": 3.0,
+      "DDR4_MT_s": 2666,
+      "four_channel_bandwidth_ratio_assumption": 1.2498827941865918,
+      "scenarios": [
+        {
+          "assumed_baseline_CPU_lane_memory_service_fraction": 0,
+          "decode_tok_s_by_reference_run": [
+            65.90542174368407,
+            64.0738448226653
+          ],
+          "mean_decode_tok_s": 64.98963328317468,
+          "gain_percent": 94.8714641174653
+        },
+        {
+          "assumed_baseline_CPU_lane_memory_service_fraction": 0.25,
+          "decode_tok_s_by_reference_run": [
+            56.461369968158564,
+            55.00788378877034
+          ],
+          "mean_decode_tok_s": 55.734626878464454,
+          "gain_percent": 67.12032047515576
+        },
+        {
+          "assumed_baseline_CPU_lane_memory_service_fraction": 0.5,
+          "decode_tok_s_by_reference_run": [
+            49.38469011371406,
+            48.18944442944188
+          ],
+          "mean_decode_tok_s": 48.78706727157797,
+          "gain_percent": 46.28805778584098
+        },
+        {
+          "assumed_baseline_CPU_lane_memory_service_fraction": 0.75,
+          "decode_tok_s_by_reference_run": [
+            43.884369555852345,
+            42.87493132448486
+          ],
+          "mean_decode_tok_s": 43.379650440168604,
+          "gain_percent": 30.07391436332414
+        },
+        {
+          "assumed_baseline_CPU_lane_memory_service_fraction": 1,
+          "decode_tok_s_by_reference_run": [
+            39.48648209836002,
+            38.61619244051331
+          ],
+          "mean_decode_tok_s": 39.051337269436665,
+          "gain_percent": 17.09546407627185
+        }
+      ]
+    }
+  ],
+  "limits": [
+    "Four populated channels and same GPU/PCIe bandwidth held constant; no additional PCIe4 gain included.",
+    "CPU timer overlaps other work and is an approximation, not a critical-path measurement. m is an explicit unmeasured sensitivity parameter; physical DRAM counters were not available.",
+    "CPU performance means expert-kernel compute throughput, not a generic CPU benchmark or core-count ratio. If CPU estimate already includes RAM effects, use single Amdahl multiplier instead of applying this extra RAM split.",
+    "DDR4 speed ratios assume proportional delivered bandwidth, unchanged efficiency and sufficient DIMM rating/CPU support.",
+    "Memory stalls and compute can overlap; serial split is a planning model, not a forecast or bound. Bottlenecks/calibration/NUMA/cache changes may alter scaling.",
+    "No prefill CPU/RAM sensitivity established; do not project these decode results onto prefill."
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "updated": "2026-11-12T21:38:21.518336+00:00",
+  "reference_case": "full-ista-v2048-t12-c32768-l80-dspark-draft-iq2xxs-ownlinked1-borrow-ctx98304-swin-decay0.9-exp714-align256-noslots-checklend-heatbuild-pfdecay0-w3-monv2",
+  "measured_RAM_read_GB_s": 58.885,
+  "measured_RAM_config": "4 channels DDR4-2133; 12 workers sequential 4GiB read, warmed5 repeats",
+  "measured_decode_tok_s_mean": 33.35,
+  "channel_sensitivity_scenarios": [
+    {
+      "populated_channels": 4,
+      "DDR4_MT_s": 2666,
+      "theoretical_GB_s": 85.312,
+      "illustrative_read_GB_s_at_current_efficiency": 73.59934833567745,
+      "assumed_bandwidth_ratio": 1.2498827941865918,
+      "decode_tok_s_sensitivity_if_DRAM_accounts_for_10_25_40_percent_of_wall": [
+        34.0303517434072,
+        35.104570131280234,
+        36.24881767775604
+      ]
+    },
+    {
+      "populated_channels": 6,
+      "DDR4_MT_s": 2666,
+      "theoretical_GB_s": 127.968,
+      "illustrative_read_GB_s_at_current_efficiency": 110.39902250351619,
+      "assumed_bandwidth_ratio": 1.8748241912798878,
+      "decode_tok_s_sensitivity_if_DRAM_accounts_for_10_25_40_percent_of_wall": [
+        34.98233396285804,
+        37.75418259023355,
+        41.00308983582365
+      ]
+    },
+    {
+      "populated_channels": 8,
+      "DDR4_MT_s": 2666,
+      "theoretical_GB_s": 170.624,
+      "illustrative_read_GB_s_at_current_efficiency": 147.1986966713549,
+      "assumed_bandwidth_ratio": 2.4997655883731835,
+      "decode_tok_s_sensitivity_if_DRAM_accounts_for_10_25_40_percent_of_wall": [
+        35.47858183196664,
+        39.23486127199515,
+        43.880712664100294
+      ]
+    }
+  ],
+  "traffic_planning_proxies": [
+    {
+      "logical_CPU_weight_MB_per_output": 519.2036709902912,
+      "counted_staging_payload_MB_per_output": 92.12778873786408,
+      "RAM_planning_MB_per_output_assuming_3x_staging": 795.5870372038835,
+      "planning_GB_s_at_measured_decode": 26.811283153770876,
+      "planning_GB_s_at_35": 27.845546302135922
+    },
+    {
+      "logical_CPU_weight_MB_per_output": 533.6181976807817,
+      "counted_staging_payload_MB_per_output": 92.95701889250815,
+      "RAM_planning_MB_per_output_assuming_3x_staging": 812.4892543583062,
+      "planning_GB_s_at_measured_decode": 26.812145393824103,
+      "planning_GB_s_at_35": 28.437123902540716
+    }
+  ],
+  "limits": [
+    "DRAM counters unavailable by user choice; no measured physical DRAM traffic or measured 4-vs8channel inference comparison.",
+    "Channel table is a sensitivity calculation, not a forecast. Memory service fraction10/25/40% is assumed, not measured.",
+    "Equal channel efficiency and DDR4-2666 operation are assumed; CPU model, DIMM ranks and platform can change them.",
+    "Logical CPU weight traffic counts expert token-rows; multi-token kernels may reuse weights, so it is not an actual DRAM byte count.",
+    "Three times staging payload approximates one source read, one destination write and one DMA read; cache behavior can change physical DRAM bytes.",
+    "These proxies omit activation/Engram/control traffic and HIP copy details; they are neither total traffic nor rigorous bounds.",
+    "Do not multiply CPU, PCIe and RAM what-if gains; work overlaps and the bottleneck changes."
+  ],
+  "interpretation": "At35tok/s the logical-weight+3xstaging planning proxy is below current58.9GB/s sequential read ceiling. This does not establish bandwidth sufficiency under contention, but there is no evidence that eight channels are required to reach35. Additional compute/PCIe capacity remains a plausible benefit."
+}
